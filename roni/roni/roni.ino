@@ -2,15 +2,9 @@
 
 Servo pizzaServo1;
 Servo pizzaServo2;
-Servo boxServo1;
-Servo boxServo2;
+Servo boxServo;
 
 int distPin = A0;
-int pizzaServo1Pin = 5;
-int pizzaServo2Pin = 6;
-int boxServo1Pin = 9;
-int boxServo2Pin = 10;
-
 int dist;
 
 // these need calibration
@@ -21,21 +15,45 @@ int distThreshold = 200;
 //int distMin = ;
 //int distMax = ;
 
-int pizzaDownVal = ;
-int pizzaUpVal = ;
-
-int boxOpenVal = ;
-int boxClosedVal = ;
+int pizzaServo1up = 60;
+int pizzaServo2up = pizzaServo1up - 20;
+int pizzaServo1down = 110;
+int pizzaServo2down = pizzaServo1down - 20;
+int boxServoDown = 50;
+int boxServoUp = 150;
 
 bool boxIsOpen = false;
+
+int mountInterval = 1000;
+int mountError = 2;
+int mountArrLength = 5;
+int mountArr[5];
+int mountArrIndex = 0;
+long mountTimer = 0;
+int mountCount = 0;
+bool mounting = false;
+bool mountCountStarted;
+
+int dismountInterval = 1000;
+int dismountError = 2;
+int dismountArrLength = 5;
+int dismountArr[5];
+int dismountArrIndex = 0;
+long dismountTimer = 0;
+int dismountCount = 0;
+bool dismounting = false;
+bool dismountCountStarted;
 
 void setup() {
   Serial.begin(9600);
 
-  pizzaServo1.write(pizzaDownVal);
-  pizzaServo2.write(pizzaDownVal);
-  boxServo1.write(boxClosedVal);
-  boxServo2.write(boxClosedVal);
+  pizzaServo1.attach(5);
+  pizzaServo2.attach(6);
+  boxServo.attach(10);
+  
+  pizzaServo1.write(pizzaServo1down);
+  pizzaServo2.write(pizzaServo2down);
+  boxServo.write(boxServoDown);
 }
 
 void loop() {
@@ -57,9 +75,8 @@ void loop() {
 
 void openBox(){
   if (!boxIsOpen){
-    boxServo1.write(boxOpenVal);
-    boxServo2.write(boxOpenVal);
-    delay(15);
+    boxServo.write(boxServoUp);
+    delay(1000);
     boxIsOpen = true;
     mounting = false;
   }
@@ -69,21 +86,21 @@ void closeBox(){
   if (boxIsOpen){
     boxIsOpen = false;
     dismounting = false;
-    boxServo1.write(boxClosedVal);
-    boxServo2.write(boxClosedVal);
+    boxServo.write(boxServoDown);
     delay(15);
   }
 }
 
 void sitUpandDown(){
-  pizzaServo1.write(pizzaUpVal);
-  pizzaServo2.write(pizzaUpVal);
-  delay(500);
-  pizzaServo1.write(pizzaDownVal);
-  pizzaServo2.write(pizzaDownVal);
-  delay(500);
+  pizzaServo1.write(pizzaServo1up);
+  pizzaServo2.write(pizzaServo2up);
+  delay(750);
+  pizzaServo1.write(pizzaServo1down);
+  pizzaServo2.write(pizzaServo2down);
+  delay(750);
 }
 
+const int numReadings = 10;
 int readings[numReadings];      // the readings from the analog input
 int readIndex = 0;              // the index of the current reading
 int total = 0;                  // the running total
@@ -100,23 +117,16 @@ void getDist(){
   }
 
   dist = total / numReadings;
-  Serial.println(dist);
+//  Serial.println(dist);
   delay(1);
 }
 
-int mountInterval = 1000;
-int mountError = 2;
-int mountArrLength = 5
-int mountArr[mountArrLength];
-int mountArrIndex = 0;
-long mountTimer = 0;
-int mountCount = 0;
-bool mounting = false;
+
 
 void mountChecker(){
   
   if (mountArrIndex == mountArrLength){
-    for (var i = 0; i = mountArrLength; i++){
+    for (int i = 0; i = mountArrLength; i++){
       mountCount += mountArr[i];
     }
     if (mountCount > mountArrLength - mountError){
@@ -157,19 +167,10 @@ void mountChecker(){
   
 }
 
-int dismountInterval = 1000;
-int dismountError = 2;
-int dismountArrLength = 5
-int dismountArr[dismountArrLength];
-int dismountArrIndex = 0;
-long dismountTimer = 0;
-int dismountCount = 0;
-bool dismounting = false;
-
 void dismountChecker(){
   
   if (dismountArrIndex == dismountArrLength){
-    for (var i = 0; i = dismountArrLength; i++){
+    for (int i = 0; i = dismountArrLength; i++){
       dismountCount += dismountArr[i];
     }
     if (dismountCount > dismountArrLength - dismountError){
