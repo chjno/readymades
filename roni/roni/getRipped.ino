@@ -1,7 +1,10 @@
 Servo pizzaServo1;
 Servo pizzaServo2;
 
-int pizzaPause = 750;
+const int pizzaServo1Pin = 5;
+const int pizzaServo2Pin = 6;
+
+int pizzaPause = 500;
 long pizzaCounter = 0;
 bool pizzaDown = true;
 
@@ -10,13 +13,22 @@ int pizzaServo2up = pizzaServo1up - 20;
 int pizzaServo1down = 110;
 int pizzaServo2down = pizzaServo1down - 20;
 
+void pizzaServoSetup(){
+  pizzaServo1.attach(pizzaServo1Pin);
+  pizzaServo2.attach(pizzaServo2Pin);
+  pizzaServo1.write(pizzaServo1down);
+  pizzaServo2.write(pizzaServo2down);
+}
+
 void getRipped(){
 
   if (millis() - pizzaCounter > pizzaPause){
     if (pizzaDown){
       sitUp();
+      pizzaPause = 250;
     } else {
       sitDown();
+      pizzaPause = 750;
     }
     pizzaCounter = millis();
   }
@@ -24,8 +36,18 @@ void getRipped(){
 }
 
 void sitUp(){
-  pizzaServo1.write(pizzaServo1up);
-  pizzaServo2.write(pizzaServo2up);
+  int count;
+  for (int i = 0; i < 10; i++){
+    count = count + 5;
+    pizzaServo1.write(pizzaServo1down - count);
+    pizzaServo2.write(pizzaServo2down - count);
+    delay(50);
+  }
+  count = 0;
+
+  
+//  pizzaServo1.write(pizzaServo1up);
+//  pizzaServo2.write(pizzaServo2up);
   pizzaDown = false;
   Serial.println("sitting up");
 }

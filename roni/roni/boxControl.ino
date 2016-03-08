@@ -1,6 +1,6 @@
 Servo boxServo;
 
-const int boxServoPin = 10;
+const int boxServoPin = 3;
 
 int boxServoDown = 50;
 int boxServoUp = 150;

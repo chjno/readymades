@@ -13,6 +13,7 @@ void setup() {
   Serial.begin(9600);
 
   boxServoSetup();
+  pizzaServoSetup();
 }
 
 void loop() {
