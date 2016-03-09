@@ -8,7 +8,7 @@ int pizzaPause = 750;
 long pizzaCounter = 0;
 bool pizzaDown = true;
 
-int pizzaServo1up = 60;
+int pizzaServo1up = 70;
 int pizzaServo2up = pizzaServo1up - 20;
 int pizzaServo1down = 110;
 int pizzaServo2down = pizzaServo1down - 20;
