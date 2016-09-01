@@ -1,0 +1,126 @@
+<html>
+
+<head>
+  <title></title>
+  <script src="js/clmtrackr.js"></script>
+  <script src="models/model_pca_20_svm.js"></script>
+  <style>
+  body {
+    background: black;
+  }
+  
+  #c {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /*    width: 100%;
+    height: 100%;*/
+    width: 640px;
+    height: 480px;
+  }
+  
+  #v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /*    width: 100%;
+    height: 100%;*/
+    width: 640px;
+    height: 480px;
+    -o-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    -ms-filter: fliph;
+    /*IE*/
+    filter: fliph;
+    /*IE*/
+  }
+  </style>
+</head>
+
+<body>
+  <!-- <canvas id="c"></canvas> -->
+  <video autoplay width="640" height="480" id="v"></video>
+  <canvas width="640" height="480" id="c"></canvas>
+  <script>
+  var video = document.querySelector("#v");
+
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+
+  if (navigator.getUserMedia) {
+    navigator.getUserMedia({
+      video: true
+    }, handleVideo, videoError);
+  }
+
+  function handleVideo(stream) {
+    video.src = window.URL.createObjectURL(stream);
+  }
+
+  function videoError(e) {
+    // do something
+  }
+
+  var videoInput;
+  var canvas;
+  var context;
+  document.addEventListener('DOMContentLoaded', function() {
+    videoInput = document.getElementById('v');
+    canvas = document.getElementById('c');
+    context = canvas.getContext('2d');
+
+    // var cw = Math.floor(canvas.clientWidth / 100);
+    // var ch = Math.floor(canvas.clientHeight / 100);
+    // canvas.width = cw;
+    // canvas.height = ch;
+
+    v.addEventListener('play', function() {
+      draw(this, context, 640, 480);
+    }, false);
+
+    // positionLoop();
+    // drawLoop();
+
+  }, false);
+
+  function draw(v, c, w, h) {
+    if (v.paused || v.ended) return false;
+    c.drawImage(v, 0, 0, w, h);
+    setTimeout(draw, 20, v, c, w, h);
+  }
+
+
+
+  // var videoInput = document.getElementById('v');
+
+  var ctracker = new clm.tracker();
+  ctracker.init(pModel);
+  ctracker.start(videoInput);
+  var coords = ctracker.getCurrentPosition();
+
+  function positionLoop() {
+    requestAnimationFrame(positionLoop);
+    var positions = ctracker.getCurrentPosition();
+    // positions = [[x_0, y_0], [x_1,y_1], ... ]
+    // do something with the positions ...
+  }
+  // positionLoop();
+
+
+  // var canvasInput = document.getElementById('canvas');
+  // var cc = canvas.getContext('2d');
+
+  function drawLoop() {
+    requestAnimationFrame(drawLoop);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    ctracker.draw(canvas);
+  }
+  // drawLoop();
+  </script>
+</body>
+
+</html>

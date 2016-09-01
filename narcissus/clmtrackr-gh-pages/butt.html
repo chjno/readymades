@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Face mask</title>
+		<meta charset="utf-8">
+		<style>
+			@import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);
+
+			body {
+				font-family: 'Lato';
+				background-color: #f0f0f0;
+				margin: 0px auto;
+				max-width: 1150px;
+			}
+			
+			
+			#overlay, #webgl {
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				-o-transform : scaleX(-1);
+				-webkit-transform : scaleX(-1);
+				transform : scaleX(-1);
+/*				-o-transform : scaleY(-1);
+				-webkit-transform : scaleY(-1);
+				transform : scaleY(-1);*/
+				-ms-filter : fliph; /*IE*/
+				filter : fliph; /*IE*/
+			}
+
+			#webgl {
+				opacity: 0.0;
+			}
+
+			#water {
+				position: absolute;
+				top: 0px;
+				/*left: 80px;*/
+				left: 0px;
+				opacity: 0.4;
+			}
+
+			#toilet {
+				position: absolute;
+				top: 0px;
+				left: 0px;
+			}
+
+			#videoel {
+				-o-transform : scaleX(-1);
+				-webkit-transform : scaleX(-1);
+				transform : scaleX(-1);
+				-ms-filter : fliph; /*IE*/
+				filter : fliph; /*IE*/
+			}
+
+			#container {
+				position : relative;
+				width : 370px;
+				/*margin : 0px auto;*/
+			}
+			
+			#content {
+				margin-top : 70px;
+				margin-left : 100px;
+				margin-right : 100px;
+				max-width: 950px;
+			}
+			 
+			#sketch {
+				display: none;
+			}
+			
+			#filter {
+				display: none;
+			}
+
+			h2 {
+				font-weight : 400;
+			}
+
+			.masks {
+				display: none;
+			}
+
+			.nogum {
+						display : none;
+			}
+			
+			.btn {
+						font-family: 'Lato';
+						font-size: 16px;
+			}
+
+			.hide {
+				display : none;
+			}
+
+			.nohide {
+				display : block;
+			}
+		</style>
+		<script>
+			// getUserMedia only works over https in Chrome 47+, so we redirect to https. Also notify user if running from file.
+			if (window.location.protocol == "file:") {
+				alert("You seem to be running this example directly from a file. Note that these examples only work when served from a server or localhost due to canvas cross-domain restrictions.");
+			} else if (window.location.hostname !== "localhost" && window.location.protocol !== "https:"){
+				window.location.protocol = "https";
+			}
+		</script>
+		<script type="text/javascript">
+
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-32642923-1']);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+
+		</script>
+	</head>
+	<body>
+		<script src="./js/dat.gui.min.js"></script>
+		<script src="./js/utils.js"></script>
+		<script src="./js/numeric-1.2.6.min.js"></script>
+		<script src="./js/mosse.js"></script>
+		<script src="./js/jsfeat-min.js"></script>
+		<script src="./js/frontalface.js"></script>
+		<script src="./js/jsfeat_detect.js"></script>
+		<script src="./js/left_eye_filter.js"></script>
+		<script src="./js/right_eye_filter.js"></script>
+		<script src="./js/nose_filter.js"></script>
+		<script src="./models/model_pca_20_svm.js"></script>
+		<script src="./js/clm.js"></script>
+		<script src="./js/svmfilter_webgl.js"></script>
+		<script src="./js/svmfilter_fft.js"></script>
+		<script src="./js/mossefilter.js"></script>
+		<script src="./js/Stats.js"></script>
+		<script src="./js/face_deformer.js"></script>
+		<script src="./js/jquery.min.js"></script>
+		<div id="content">
+			<div id="container">
+				<!--<video id="videoel" width="500" height="375" preload="auto">-->
+				<video id="videoel" width="400" height="300" preload="auto">
+					<!--<source src="./media/Capture_1_092.ogv" type="video/ogg"/>-->
+				</video>
+				<canvas id="overlay" width="400" height="300"></canvas>
+				<canvas id="webgl" width="400" height="300"></canvas>
+				<!-- <canvas id="water" width="400" height="300"></canvas> -->
+				<video src="./media/water.mp4" id="water" width="600" height = "300" autoplay loop></video>
+				<canvas id="toilet" width="400" height="300"></canvas>
+				
+			</div>
+			<br/>
+			<!-- <input class="btn" type="button" value="wait, loading video" disabled="disabled" onclick="startVideo()" id="startbutton"></input> -->
+			<img id="butt" class="masks" src="./media/butt.jpg"></img>
+			<script>
+				var vid = document.getElementById('videoel');
+				var overlay = document.getElementById('overlay');
+				var overlayCC = overlay.getContext('2d');
+
+				// var water = document.getElementById('water');
+				// var waterCC = water.getContext('2d');
+
+				var toilet = document.getElementById('toilet');
+				var toiletCC = toilet.getContext('2d');
+				
+				var maskc = document.getElementById('webgl');
+				// var maskCC = maskc.getContext('experimental-webgl', {premultipliedAlpha: false});
+				// maskCC.globalAlpha = 0.3;
+
+
+				// var water_img = new Image();
+		  //   water_img.onload = function() {
+		  //   	waterCC.globalAlpha = 0.4;
+		  //     waterCC.drawImage(water_img, 0, 0);
+		  //   }
+		  //   water_img.src = './media/water.jpg';
+
+		    var toilet_mask = new Image();
+		    toilet_mask.onload = function(){
+			    toiletCC.drawImage(toilet_mask, 0, 0);
+			  }
+		    toilet_mask.src = './media/toilet.png';
+				
+				var ctrack = new clm.tracker();
+				ctrack.init(pModel);
+				
+				// function enablestart() {
+				// 	var startbutton = document.getElementById('startbutton');
+				// 	startbutton.value = "start";
+				// 	startbutton.disabled = null;
+				// }
+				
+				var insertAltVideo = function(video) {
+					
+					if (supports_video()) {
+						if (supports_ogg_theora_video()) {
+							video.src = "./media/cap13_edit2.ogv";
+						} else if (supports_h264_baseline_video()) {
+							video.src = "./media/cap13_edit2.mp4";
+						} else {
+							return false;
+						}
+						//video.play();
+						return true;
+					} else return false;
+				}
+				
+				// check whether browser supports webGL
+				var webGLContext;
+				var webGLTestCanvas = document.createElement('canvas');
+				if (window.WebGLRenderingContext) {
+					webGLContext = webGLTestCanvas.getContext('webgl') || webGLTestCanvas.getContext('experimental-webgl');
+					if (!webGLContext || !webGLContext.getExtension('OES_texture_float')) {
+						webGLContext = null;
+					}
+				}
+				if (webGLContext == null) {
+					alert("Your browser does not seem to support WebGL. Unfortunately this face mask example depends on WebGL, so you'll have to try it in another browser. :(");
+				}
+				
+				navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+				window.URL = window.URL || window.webkitURL || window.msURL || window.mozURL;
+				
+				// check for camerasupport
+				if (navigator.getUserMedia) {
+					// set up stream
+					
+					// chrome 19 shim
+					var videoSelector = {video : true};
+					if (window.navigator.appVersion.match(/Chrome\/(.*?) /)) {
+						var chromeVersion = parseInt(window.navigator.appVersion.match(/Chrome\/(\d+)\./)[1], 10);
+						if (chromeVersion < 20) {
+							videoSelector = "video";
+						}
+					};
+					
+					navigator.getUserMedia(videoSelector, function( stream ) {
+						if (vid.mozCaptureStream) {
+							vid.mozSrcObject = stream;
+						} else {
+							vid.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
+						}
+						vid.play();
+					}, function() {
+						insertAltVideo(vid);
+						document.getElementById('gum').className = "hide";
+						document.getElementById('nogum').className = "nohide";
+						alert("There was some problem trying to fetch video from your webcam, using a fallback video instead.");
+					});
+				} else {
+					insertAltVideo(vid)
+					document.getElementById('gum').className = "hide";
+					document.getElementById('nogum').className = "nohide";
+					alert("Your browser does not seem to support getUserMedia, using a fallback video instead.");
+				}
+
+				// vid.addEventListener('canplay', enablestart, false);
+				vid.addEventListener('canplay', startVideo, false);
+
+				function startVideo() {
+					// start video
+					vid.play();
+					// start tracking
+					ctrack.start(vid);
+					// start drawing face grid
+					drawGridLoop();
+				}
+
+				var positions;
+				var fd = new faceDeformer();
+				// fd.init(document.getElementById('webgl'));
+				fd.init(maskc);
+				
+				// var masks = {
+				// 	"butt" : [
+				var buttPoints = [
+						[93,132],
+						[91,157],
+						[95,179],
+						[102,203],
+						[115,222],
+						[132,237],
+						[154,249],
+						[177,251],
+						[202,248],
+						[222,236],
+						[240,219],
+						[250,200],
+						[257,175],
+						[260,152],
+						[256,128],
+						[239,113],
+						[224,105],
+						[206,106],
+						[190,114],
+						[109,117],
+						[122,108],
+						[142,108],
+						[157,115],
+						[121,132],
+						[135,125],
+						[151,131],
+						[136,135],
+						[136,130],
+						[227,129],
+						[213,124],
+						[197,130],
+						[212,134],
+						[212,128],
+						[174,124],
+						[158,158],
+						[150,168],
+						[157,176],
+						[176,178],
+						[194,174],
+						[200,167],
+						[192,157],
+						[175,145],
+						[163,172],
+						[188,171],
+
+						[155,208],
+						[161,199],
+						[169,193],
+						[175,196],
+						[180,193],
+						[188,198],
+						[196,204],
+						[191,211],
+						[187,216],
+						[178,219],
+						[168,220],
+						[159,214],
+						[165,206],
+						[175,209],
+						[184,206],
+						[182,203],
+						[176,203],
+						[167,204],
+
+						[176,166],
+						[127,127],
+						[145,127],
+						[145,134],
+						[127,134],
+						[221,125],
+						[203,125],
+						[204,132],
+						[221,132]
+					]
+				// };
+				var currentMask = 0;
+				var animationRequest;
+		
+				function drawGridLoop() {
+					// get position of face
+					positions = ctrack.getCurrentPosition(vid);
+					overlayCC.clearRect(0, 0, 500, 375);
+					if (positions) {
+						// draw current grid
+						// ctrack.draw(overlay);
+					}
+					// check whether mask has converged
+					var pn = ctrack.getConvergence();
+					if (pn < 0.4) {
+						console.log('heloloolo');
+						// switchMasks();
+						fd.load(document.getElementById("butt"), buttPoints, pModel);
+						requestAnimFrame(drawMaskLoop);
+					} else {
+						requestAnimFrame(drawGridLoop);
+					}
+				}
+					
+				// function switchMasks() {
+				// 	// get mask
+				// 	var maskname = Object.keys(masks)[currentMask];
+				// 	fd.load(document.getElementById(maskname), masks[maskname], pModel);
+				// }
+				
+				var maskOpacity = 0.0
+				var stopCount = 0;
+				function drawMaskLoop() {
+					// get position of face
+					positions = ctrack.getCurrentPosition();
+					// overlayCC.clearRect(0, 0, 400, 300);
+					if (positions) {
+						stopCount = 0;
+						maskOpacity += 0.001666667;
+						$('#webgl').css('opacity',maskOpacity);
+						// draw mask on top of face
+						fd.draw(positions);
+						animationRequest = requestAnimFrame(drawMaskLoop);
+					} else {
+						stopCount += 1;
+						console.log(stopCount);
+						if (stopCount > 4){
+							maskOpacity = 0.0;
+							$('#webgl').css('opacity',maskOpacity);
+							console.log('byebyeeee');
+							requestAnimFrame(drawGridLoop);				
+						} else {
+							animationRequest = requestAnimFrame(drawMaskLoop);
+						}		
+					}
+					// animationRequest = requestAnimFrame(drawMaskLoop);
+				}
+					
+			</script>
+		</div>
+	</body>
+</html>
