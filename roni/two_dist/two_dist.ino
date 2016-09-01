@@ -2,10 +2,10 @@
 
 //int distPin = A0;
 int dist;
-int distThreshold = 10;
+int distThreshold = 100;
 
 int sitDist;
-int sitDistThreshold = 150;
+int sitDistThreshold = 100;
 
 bool mounting = false;
 bool dismounting = false;

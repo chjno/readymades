@@ -19,3 +19,12 @@ int getSitDist() {
   return sitDist;
   delay(1);
 }
+
+
+//int getSitDist() {
+//  for (int i = 0; i < numSitReadings; i++){
+//    sitTotal = analogRead(sitDistPin);
+//  }
+//  int sitDist = sitTotal / numSitReadings;
+//  return sitDist;
+//}

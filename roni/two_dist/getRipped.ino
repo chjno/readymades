@@ -80,6 +80,7 @@ void getRipped(){
   if (millis() - pizzaCounter > pizzaPause){
     if (pizzaDown){
       if (sitDist > sitDistThreshold){
+//        Serial.println(sitDist);
         sitUp();
         pizzaCounter = millis();
       }
